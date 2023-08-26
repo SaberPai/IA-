@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -37,7 +38,6 @@ public class EquipmentManagement {
     }
 
     public static void main(String[] args) {
-        loadEquipmentQuantities();
 
         Timer timer = new Timer();
         TimerTask reminderTask = new TimerTask() {
@@ -56,15 +56,43 @@ public class EquipmentManagement {
             choice = input.nextInt();
             switch (choice) {
                 case 1:
+                    def.ViewStorage();
                     borrowEquipment(input);
                     break;
 
                 case 2:
-                    // Return equipment
+                    System.out.println("Enter the name of the equipment you want to return:");
+                    String equipmentName = input.nextLine();
+            
+                    int rowIndex = -1;
+                    int colIndex = -1;
+            
+                    // Find the equipment in the equipmentSpec array
+                    for (int rows = 0; rows < equipmentSpec.length; rows++) {
+                        for (int cols = 0; cols < equipmentSpec[rows].length; cols++) {
+                            if (equipmentSpec[rows][cols].equalsIgnoreCase(equipmentName)) {
+                                rowIndex = rows;
+                                colIndex = cols;
+                                break;
+                            }
+                        }
+                    }
+            
+                    if (rowIndex != -1 && colIndex != -1) {
+                        System.out.println("Equipment returned. Thank you!");
+            
+                        // Update equipment quantity
+                        equipmentQuantity[rowIndex][colIndex]++;
+            
+                        // Remove the due date information (if stored in a separate data structure)
+            
+                    } else {
+                        System.out.println("Equipment not found.");
+                    }
                     break;
 
                 case 3:
-                    // Add new equipment or mark equipment as broken
+                    addOrMarkEquipment(input);
                     break;
 
                 case 4:
@@ -77,11 +105,6 @@ public class EquipmentManagement {
                     break;
             }
         } while (choice > 0 && choice < 5);
-    }
-
-    private static void loadEquipmentQuantities() {
-        // Load equipment quantities from a file (e.g., equipment_quantities.txt)
-        // Update the equipmentQuantity array
     }
 
     private static void saveEquipmentQuantities() {
@@ -100,12 +123,107 @@ public class EquipmentManagement {
     }
 
     private static void borrowEquipment(Scanner input) {
-        // Implement the equipment borrowing functionality
-    }
+        System.out.println("Enter the name of the equipment you want to borrow:");
+        String equipmentName = input.nextLine();
+
+        int rowIndex = -1;
+        int colIndex = -1;
+
+        // Find the equipment in the equipmentSpec array
+         for (int rows = 0; rows < equipmentSpec.length; rows++) {
+            for (int cols = 0; cols < equipmentSpec[rows].length; cols++) {
+                if (equipmentSpec[rows][cols].equalsIgnoreCase(equipmentName)) {
+                    rowIndex = rows;
+                    colIndex = cols;
+                    break;
+                }
+            }
+        }
+
+        if (rowIndex != -1 && colIndex != -1) {
+            if (equipmentQuantity[rowIndex][colIndex] > 0) {
+                System.out.println("Equipment available. Borrowing...");
+                equipmentQuantity[rowIndex][colIndex]--;
+
+                // Calculate due date (e.g., 7 days from today)
+                long currentTime = System.currentTimeMillis();
+                long dueDate = currentTime + 7 * 24 * 60 * 60 * 1000; 
+
+                System.out.println("Due date for returning: " + new Date(dueDate));
+
+            } else {
+                System.out.println("Equipment not available at the moment.");
+            }
+        } else {
+            System.out.println("Equipment not found.");
+        }
+        }
 
     private static void checkMissingEquipment() {
         // Check for missing equipment and send reminders
     }
 
-    // Other methods for returning equipment, adding new equipment, etc.
+    private static void addOrMarkEquipment(Scanner input) {
+        System.out.println("Do you want to add new equipment or mark existing equipment as broken? (add/broken)");
+        String choice = input.nextLine().toLowerCase();
+    
+        if (choice.equals("add")) {
+            System.out.println("Enter the name of the new equipment:");
+            String newEquipment = input.nextLine();
+    
+            System.out.println("Enter the quantity of the new equipment:");
+            int newQuantity = input.nextInt();
+            input.nextLine(); // Consume newline
+    
+            // Find an empty spot in the equipment matrix
+            int rowIndex = -1;
+            int colIndex = -1;
+            for (int rows = 0; rows < equipmentQuantity.length; rows++) {
+                for (int cols = 0; cols < equipmentQuantity[rows].length; cols++) {
+                    if (equipmentQuantity[rows][cols] == 0) {
+                        rowIndex = rows;
+                        colIndex = cols;
+                        break;
+                    }
+                }
+            }
+    
+            if (rowIndex != -1 && colIndex != -1) {
+                equipmentSpec[rowIndex][colIndex] = newEquipment;
+                equipmentQuantity[rowIndex][colIndex] = newQuantity;
+                System.out.println("New equipment added successfully.");
+            } else {
+                System.out.println("No space available for new equipment.");
+            }
+    
+        } else if (choice.equals("broken")) {
+            System.out.println("Enter the name of the equipment to mark as broken:");
+            String brokenEquipment = input.nextLine();
+    
+            int rowIndex = -1;
+            int colIndex = -1;
+    
+            // Find the equipment in the equipmentSpec array
+            for (int rows = 0; rows < equipmentSpec.length; rows++) {
+                for (int cols = 0; cols < equipmentSpec[rows].length; cols++) {
+                    if (equipmentSpec[rows][cols].equalsIgnoreCase(brokenEquipment)) {
+                        rowIndex = rows;
+                        colIndex = cols;
+                        break;
+                    }
+                }
+            }
+    
+            if (rowIndex != -1 && colIndex != -1) {
+                equipmentQuantity[rowIndex][colIndex] = 0;
+                System.out.println("Equipment marked as broken and removed from availability.");
+            } else {
+                System.out.println("Equipment not found.");
+            }
+    
+        } else {
+            System.out.println("Invalid choice.");
+        }
+    }
 }
+
